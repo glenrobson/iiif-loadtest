@@ -129,3 +129,33 @@ class IIIFURLTester(FastHttpUser):
 
             self.client.get(url,name="Thumbnail panel thumbnail") 
 
+  # Zoom to point
+
+  # Virtual reading
+
+  # Custom region
+
+  # Full region download
+
+  # Full full image
+
+  # Sort out weighting 
+    @task
+    def fullImage(self):
+        with self.client.get(rndImage(), name="info.json") as response:
+            response.encoding = "utf-8"
+            info = response.json()
+
+            version = getVersion(info)
+            ident = ""
+            size = ""
+            if version == Version.THREE:
+                size = "max"
+                ident = info['id']
+            else:
+                size = "full"    
+                ident = info['@id']
+
+            url = f"{ident}/full/{size}/0/default.jpg"    
+
+            self.client.get(url, name="Full/full image request")
