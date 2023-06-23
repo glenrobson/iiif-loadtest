@@ -12,7 +12,19 @@ To use the load tester you will need to supply a list of URLs to the locust test
 /api/image/3.0/example/reference/0a469c27256eda739d43124cc448a3ba-2_insidefrontcover/info.json
 ```
 
-You can see above the loadtest will work with both v2 and v3 images. To run the loadtest you can run the following passing in the image server host using -H parameter:
+You can see above the loadtest will work with both v2 and v3 images. 
+
+## Installation  
+
+Install instructions can be found on the [locust documentation](https://docs.locust.io/en/stable/installation.html) or you can run:
+
+```
+pip install -r requirments.txt
+```
+
+## Running the tests 
+
+To run the loadtest you can run the following passing in the image server host using -H parameter:
 
 ```
 locust -f imagesrv/locustfile.py --url-list data/iiif-reference.txt -H https://iiif.io

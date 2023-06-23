@@ -28,4 +28,4 @@ if __name__ == "__main__":
 
                 response.close()
             except HTTPError as e:
-                print (f"{e.getcode()}: {line}")    
+                print (f"{e.getcode()}: {line}")
