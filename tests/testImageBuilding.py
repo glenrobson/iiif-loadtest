@@ -137,7 +137,7 @@ class ImageBuilder(unittest.TestCase):
 
         # Centre point of the image
         images = imageBuilder.zoomToPoint(LEVEL0_V3, 2016, 1512)
-        self.assertTrue(('0,0,2048,2048','1024,1024') == images[0], "Tile 0,0 missing")
+        self.assertTrue(('0,0,2048,2048','1024,1024') == images[1], "Tile 0,0 missing")
         self.assertTrue(('0,2048,2048,976','1024,488') == images[1], "Tile 0,1 missing")
         self.assertTrue(('2048,0,1984,2048','992,1024') == images[2], "Tile 1,0 missing")
         self.assertTrue(('2048,2048,1984,976','992,488') == images[3], "Tile 1,1 missing")
