@@ -1,0 +1,10 @@
+/Places/images/bern/info.json
+/Places/images/sa/info.json
+/Places/images/aber/info.json
+/Places/images/ann_arbor/info.json
+/Places/images/lisbon/info.json
+/Places/images/bratislava/info.json
+/Space/images/JNCE_2021158_34C00002_V01-blue/info.json
+/Space/images/JNCE_2021158_34C00002_V01-green/info.json
+/Space/images/JNCE_2021158_34C00002_V01-red/info.json
+/Space/images/webb1/info.json

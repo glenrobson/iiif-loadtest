@@ -2,13 +2,10 @@ from locust import FastHttpUser, task, events
 import json
 import os
 import random
+import math
 from enum import Enum
-
-# class syntax
-
-class Version(Enum):
-    TWO = "2"
-    THREE = "3"
+import imageBuilder
+from imageBuilder import Version
 
 images = []
 
@@ -43,51 +40,8 @@ def rndImage():
 def rndImageIdentifier():
     return identifier(rndImage())
 
-def getVersion(info):    
-    if "type" in info and info['type'] == 'ImageService3':
-        return Version.THREE
-    else:    
-        return Version.TWO
-
-def constructURL(info, region, width=None, height=None, bounded=False, rotation="0", quality="default", format="jpg"):    
-    version = getVersion(info)
-    if version == version.THREE:
-        identifier = info['id']
-
-        if width and not height:
-            size = f"{width},"
-        elif height and not width:    
-            size = f",{height}"
-        elif not height and not width:
-            size = "max"    
-        else:
-            size = f"{width},{height}"
-    else:
-        # assume v2    
-        identifier = info['@id']
-
-        if width and not height:
-            size = f"{width},"
-        elif height and not width:    
-            size = f",{height}"
-        elif not height and not width:
-            size = "full"    
-        else:
-            if bounded:
-                size = f"{width},{height}"
-            else:
-                # v2 conical URL is to only use the width
-                size = f"{width},"
-
-    if bounded:
-        size = f"!{size}"
-
-    if identifier.endswith('/'):
-        identifier = identifier[:-1]
-
-    return f"{identifier}/{region}/{size}/{rotation}/{quality}.{format}"    
-
 class IIIFURLTester(FastHttpUser):
+  # Sort out weighting
 
     @task
     def getMiradorThumbnail(self):
@@ -121,41 +75,95 @@ class IIIFURLTester(FastHttpUser):
                         break
 
                 if found:
-                    url = constructURL(info, 'full', width=width, height=height)
+                    url = imageBuilder.constructURL(info, 'full', width=width, height=height)
                 else:
-                    url = constructURL(info, 'full', width=width, height=height, bounded=True)
+                    url = imageBuilder.constructURL(info, 'full', width=width, height=height, bounded=True)
             else:
-                url = constructURL(info, 'full', width=width, height=height, bounded=True)
+                url = imageBuilder.constructURL(info, 'full', width=width, height=height, bounded=True)
 
             self.client.get(url,name="Thumbnail panel thumbnail") 
 
-  # Zoom to point
+    # Zoom to point
+    @task
+    def zoomToPoint(self):
+        with self.client.get(rndImage(), name="info.json") as response:
+            response.encoding = "utf-8"
+            info = response.json()
 
-  # Virtual reading
+            images = imageBuilder.zoomToPoint(info, random.randint(0, info['width'] - 1), random.randint(0, info['height'] - 1))
 
-  # Custom region
+            for (region, size) in images:
+                url = imageBuilder.constructURL(info, region, size=size)
+                self.client.get(url,name="Zoom to point") 
 
-  # Full region download
+    # Virtual reading
+    @task
+    def virtualReading(self):
+        with self.client.get(rndImage(), name="info.json") as response:
+            response.encoding = "utf-8"
+            info = response.json()
 
-  # Full full image
+            # Start with thumbnail
+            url = imageBuilder.constructURL(info, 'full', width=90)
+            self.client.get(url,name="Virtual Reading") 
 
-  # Sort out weighting 
+            if 'tiles' in info and type(info['tiles']) == list:
+                # zoom into max level / 2
+                tiles = info['tiles'][0]
+                if 'scaleFactors' in tiles:
+                    levels = imageBuilder.levelsWithTiles(info)
+                    images = imageBuilder.tiles(info, levels[random.randint(0, len(levels) - 1)])
+                    for x in range(len(images)):
+                        for y in range(len(images[x])):
+                            (region, size) = images[x][y]
+                            url = imageBuilder.constructURL(info, region, size=size)
+                            self.client.get(url,name="Virtual Reading") 
+
+
+    # Custom region
+    @task
+    def customRegion(self):
+        with self.client.get(rndImage(), name="info.json") as response:
+            response.encoding = "utf-8"
+            info = response.json()
+
+            width = random.randint(200,400)
+            height = random.randint(200,400)
+            x = random.randint(0,info['width'] - width)
+            y = random.randint(0,info['height'] - height)
+
+            url = imageBuilder.constructURL(info, f'{x},{y},{width},{height}', size=f"{width},{height}")
+
+            self.client.get(url,name="Custom region") 
+
+    # Full region download
+    @task
+    def fullImageSized(self):
+        sizes = [",200","150,","200,","400,","650,","675,", "800,", "!1024,1024"]
+        with self.client.get(rndImage(), name="info.json") as response:
+            response.encoding = "utf-8"
+            info = response.json()
+            
+            size = sizes[random.randint(0, len(sizes) - 1)]
+            reqWidth = size.split(',')[0].replace('!', '')
+            if reqWidth and int(reqWidth) < info['width']:
+                return
+            
+            reqHeight = size.split(',')[1]
+            if reqHeight and int(reqHeight) < info['height']:
+                return
+
+            url = f"{rndImageIdentifier()}/full/{size}/0/default.jpg"
+
+            self.client.get(url,name="Full image scaled") 
+
+    # Full full image
     @task
     def fullImage(self):
         with self.client.get(rndImage(), name="info.json") as response:
             response.encoding = "utf-8"
             info = response.json()
 
-            version = getVersion(info)
-            ident = ""
-            size = ""
-            if version == Version.THREE:
-                size = "max"
-                ident = info['id']
-            else:
-                size = "full"    
-                ident = info['@id']
-
-            url = f"{ident}/full/{size}/0/default.jpg"    
+            url = imageBuilder.constructURL(info, 'full', size="full")
 
             self.client.get(url, name="Full/full image request")
