@@ -15,7 +15,7 @@ def _(parser):
    
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
-    print ('Loading images')
+    #print ('Loading images')
     try:
         with open(environment.parsed_options.url_list, 'r') as fh:
             for line in fh:
@@ -23,7 +23,7 @@ def on_test_start(environment, **kwargs):
                 if not url.endswith('/info.json'):
                     print (f"Skipping {url} as it doesn't end with '/info.json'")
                 else:    
-                    print (f'Adding {url}')
+                    #print (f'Adding {url}')
                     images.append(url)
         if len(images) == 0:
             environment.runner.quit()
@@ -43,20 +43,20 @@ def rndImageIdentifier():
 class IIIFURLTester(FastHttpUser):
   # Sort out weighting
 
-    @task
+    @task(6)
     def getMiradorThumbnail(self):
         url = f"{rndImageIdentifier()}/full/,120/0/default.jpg"
 
         self.client.get(url,name="Mirador thumbnail") 
 
 
-    @task
+    @task(6)
     def getUVThumbnail(self):
         url = f"{rndImageIdentifier()}/full/90,/0/default.jpg"
 
         self.client.get(url,name="UV thumbnail") 
 
-    @task
+    @task(6)
     def getThumbnailPanel(self):
         with self.client.get(rndImage(), name="info.json") as response:
             response.encoding = "utf-8"
@@ -84,7 +84,7 @@ class IIIFURLTester(FastHttpUser):
             self.client.get(url,name="Thumbnail panel thumbnail") 
 
     # Zoom to point
-    @task
+    @task(3)
     def zoomToPoint(self):
         with self.client.get(rndImage(), name="info.json") as response:
             response.encoding = "utf-8"
@@ -97,7 +97,7 @@ class IIIFURLTester(FastHttpUser):
                 self.client.get(url,name="Zoom to point") 
 
     # Virtual reading
-    @task
+    @task(2)
     def virtualReading(self):
         with self.client.get(rndImage(), name="info.json") as response:
             response.encoding = "utf-8"
@@ -121,7 +121,7 @@ class IIIFURLTester(FastHttpUser):
 
 
     # Custom region
-    @task
+    @task(1)
     def customRegion(self):
         with self.client.get(rndImage(), name="info.json") as response:
             response.encoding = "utf-8"
@@ -137,7 +137,7 @@ class IIIFURLTester(FastHttpUser):
             self.client.get(url,name="Custom region") 
 
     # Full region download
-    @task
+    @task(5)
     def fullImageSized(self):
         sizes = [",200","150,","200,","400,","650,","675,", "800,", "!1024,1024"]
         with self.client.get(rndImage(), name="info.json") as response:
@@ -158,7 +158,7 @@ class IIIFURLTester(FastHttpUser):
             self.client.get(url,name="Full image scaled") 
 
     # Full full image
-    @task
+    @task(4)
     def fullImage(self):
         with self.client.get(rndImage(), name="info.json") as response:
             response.encoding = "utf-8"
